@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>地面标定库 · 快照裁决控制台</title>
+<style>
+  :root {
+    --bg:#0f1420; --panel:#171e2e; --panel2:#1d2740; --line:#2b3650;
+    --text:#e6ecf7; --muted:#93a0bb; --accent:#5b9dff;
+    --ok:#2fbf71; --ok-bg:rgba(47,191,113,.12);
+    --warn:#e8a33d; --warn-bg:rgba(232,163,61,.12);
+    --err:#f05d6e; --err-bg:rgba(240,93,110,.12);
+    --phantom:#b583f0; --phantom-bg:rgba(181,131,240,.12);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.55 -apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+         background:var(--bg); color:var(--text); }
+  header { padding:18px 26px; border-bottom:1px solid var(--line); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  header h1 { font-size:18px; margin:0; }
+  header .sub { color:var(--muted); font-size:12.5px; }
+  main { display:grid; grid-template-columns: 400px 1fr; gap:18px; padding:18px 26px; align-items:start; }
+  @media (max-width:1000px){ main { grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:18px; }
+  .panel h2 { margin:0 0 12px; font-size:15px; }
+  label { display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
+  input, textarea, select {
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:7px 9px; font:inherit;
+  }
+  textarea { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px; min-height:72px; resize:vertical; }
+  button { background:var(--accent); color:#fff; border:0; border-radius:6px; padding:8px 14px; font:inherit; cursor:pointer; margin-top:12px; }
+  button.secondary { background:var(--panel2); border:1px solid var(--line); color:var(--text); }
+  button:hover { filter:brightness(1.12); }
+  .row { display:flex; gap:8px; }
+  .row > * { flex:1; }
+  .hint { color:var(--muted); font-size:12px; margin-top:6px; }
+  .drill-item { display:flex; justify-content:space-between; align-items:center; gap:8px;
+                padding:9px 11px; border:1px solid var(--line); border-radius:7px; margin-bottom:7px; cursor:pointer; background:var(--panel2); }
+  .drill-item.active { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+  .drill-item .meta { color:var(--muted); font-size:11.5px; }
+  .gen-pill { display:inline-block; background:var(--panel2); border:1px solid var(--line); border-radius:999px;
+              padding:1px 10px; font-size:12px; color:var(--accent); }
+  .kvgrid { display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; margin-top:8px; }
+  .kvgrid div { background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font-size:12.5px;
+                font-family:ui-monospace,Menlo,Consolas,monospace; word-break:break-all; }
+  .txn { border:1px solid var(--line); border-radius:9px; margin-bottom:12px; overflow:hidden; background:var(--panel2); }
+  .txn-head { display:flex; align-items:center; gap:10px; padding:10px 13px; cursor:pointer; flex-wrap:wrap; }
+  .txn-head .txnid { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px; }
+  .badge { font-size:11.5px; font-weight:600; border-radius:999px; padding:2px 10px; white-space:nowrap; }
+  .badge.accepted { background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok); }
+  .badge.rejected-point { background:var(--err-bg); color:var(--err); border:1px solid var(--err); }
+  .badge.rejected-phantom { background:var(--phantom-bg); color:var(--phantom); border:1px solid var(--phantom); }
+  .badge.rejected-other { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn); }
+  .badge.echo { background:transparent; color:var(--muted); border:1px dashed var(--muted); }
+  .txn-body { padding:0 13px 13px; display:none; }
+  .txn.open .txn-body { display:block; }
+  .sec-title { font-size:12px; color:var(--muted); margin:12px 0 5px; text-transform:uppercase; letter-spacing:.04em; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th, td { text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:500; }
+  td.mono, .mono { font-family:ui-monospace,Menlo,Consolas,monospace; word-break:break-all; }
+  details { border:1px solid var(--line); border-radius:7px; margin-top:6px; }
+  summary { cursor:pointer; padding:7px 10px; color:var(--accent); font-size:12.5px; user-select:none; }
+  details[open] summary { border-bottom:1px solid var(--line); }
+  details .inner { padding:8px 10px; }
+  .evbox { border-radius:7px; padding:9px 11px; font-size:12.5px; margin-top:6px; }
+  .evbox.point { background:var(--err-bg); border:1px solid var(--err); }
+  .evbox.phantom { background:var(--phantom-bg); border:1px solid var(--phantom); }
+  .evbox.other { background:var(--warn-bg); border:1px solid var(--warn); }
+  .filterbar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .filterbar button { margin:0; padding:4px 12px; font-size:12.5px; background:var(--panel2); border:1px solid var(--line); color:var(--muted); }
+  .filterbar button.on { color:var(--text); border-color:var(--accent); }
+  #toast { position:fixed; right:20px; bottom:20px; max-width:420px; }
+  .toast-item { padding:10px 14px; border-radius:8px; margin-top:8px; font-size:13px; box-shadow:0 6px 24px rgba(0,0,0,.4); }
+  .toast-item.ok { background:var(--ok-bg); border:1px solid var(--ok); }
+  .toast-item.err { background:var(--err-bg); border:1px solid var(--err); }
+  .muted { color:var(--muted); }
+  code { background:var(--panel2); border:1px solid var(--line); border-radius:4px; padding:0 5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>地面标定库 · 快照裁决控制台</h1>
+  <span class="sub">工程师先在某代次快照上做点读 / 前缀扫描，再连同拟写入值提交；裁决依据不可变版本历史冻结，重传同一事务标识只回显原结果。</span>
+  <span style="flex:1"></span>
+  <span id="health" class="gen-pill">健康检查中…</span>
+</header>
+
+<main>
+  <section>
+    <div class="panel">
+      <h2>1 · 建立演练（初始键值）</h2>
+      <label>演练 ID（留空自动生成）</label>
+      <input id="drillId" placeholder="例如 calibration-line-A" />
+      <label>初始键值（JSON 对象，键=校正常数名，值=字符串）</label>
+      <textarea id="initEntries">{
+  "gyro.x.bias": "0.0120",
+  "gyro.y.bias": "-0.0031",
+  "gyro.z.bias": "0.0004",
+  "lidar.range.scale": "1.0023"
+}</textarea>
+      <button id="createBtn">建立演练</button>
+    </div>
+
+    <div class="panel">
+      <h2>演练列表</h2>
+      <div id="drillList"><div class="muted">尚未建立演练</div></div>
+      <button class="secondary" id="refreshList">刷新</button>
+    </div>
+
+    <div class="panel" id="commitPanel" style="display:none">
+      <h2>2 · 提交事务</h2>
+      <label>稳定事务标识 txnId</label>
+      <input id="txnId" placeholder="例如 fix-gyro-x-20261007" />
+      <label>基于的快照代次 gen（当前：<span id="curGenHint" class="mono"></span>）</label>
+      <input id="gen" type="number" min="0" value="0" />
+      <div class="row">
+        <div style="flex:2">
+          <label>点读取（JSON：<code>[{"key":"gyro.x.bias","value":"0.0120"}]</code>）</label>
+          <textarea id="reads" rows="3">[{"key":"gyro.x.bias","value":"0.0120"}]</textarea>
+        </div>
+      </div>
+      <label>前缀扫描（JSON：<code>[{"prefix":"gyro.","keys":["gyro.x.bias","gyro.y.bias"]}]</code>，keys 为该快照中看到的键）</label>
+      <textarea id="scans" rows="3">[{"prefix":"gyro.","keys":["gyro.x.bias","gyro.y.bias","gyro.z.bias"]}]</textarea>
+      <label>拟写入值（JSON，value 为 <code>null</code> 表示删除）</label>
+      <textarea id="writes" rows="3">[{"key":"gyro.x.bias","value":"0.0118"}]</textarea>
+      <div class="row">
+        <button id="commitBtn">提交裁决</button>
+        <button class="secondary" id="resendBtn">同标识重传</button>
+      </div>
+      <div class="hint">同标识 + 同规范载荷 → 回显原终局；同标识 + 异载荷 → 拒绝（PAYLOAD_REUSE_CONFLICT）。</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <h2>当前快照与版本状态 <span id="stateGen" class="gen-pill" style="margin-left:8px"></span></h2>
+      <div id="kvState" class="kvgrid"></div>
+      <div id="stateEmpty" class="muted" style="margin-top:8px">选择一个演练查看当前代次的存活键值</div>
+    </div>
+
+    <div class="panel">
+      <h2>事务裁决证据</h2>
+      <div class="filterbar">
+        <button data-f="all" class="on">全部</button>
+        <button data-f="accepted">✔ 已接受</button>
+        <button data-f="point">● 点读冲突</button>
+        <button data-f="phantom">◆ 幻读拒绝</button>
+        <button data-f="other">▲ 其他拒绝</button>
+      </div>
+      <div id="txnList"><div class="muted">暂无事务</div></div>
+      <button class="secondary" id="refreshState">刷新终局</button>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>

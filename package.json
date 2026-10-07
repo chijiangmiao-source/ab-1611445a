@@ -1,0 +1,15 @@
+{
+  "name": "calibration-snapshot-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "地面标定库：基于不可变版本历史与 WAL 裁决的快照隔离事务服务",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "verify": "node verify/verify.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

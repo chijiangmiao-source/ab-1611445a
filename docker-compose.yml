@@ -1,0 +1,48 @@
+# 地面标定库 · Compose 编排
+#
+# 访问：
+#   APP_PORT 可配置宿主端口（默认 8080），启动后：
+#     网页控制台   http://localhost:${APP_PORT}/
+#     健康响应     http://localhost:${APP_PORT}/healthz
+#
+# 验收：
+#   docker compose up --build verify     # 一次性运行，退出码 0/非0 报告验收结论
+#   docker compose up --build app        # 仅启动服务
+
+services:
+  app:
+    build: .
+    image: calibration-snapshot-store:latest
+    environment:
+      PORT: "8080"
+      HOST: "0.0.0.0"
+      DATA_DIR: /data
+    ports:
+      # 可配置宿主端口：APP_PORT=9090 docker compose up app
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - calib-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+    restart: unless-stopped
+
+  verify:
+    build: .
+    image: calibration-snapshot-store:latest
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      # 跨容器 API/HTTP 冒烟目标
+      BASE_URL: http://app:8080
+    command: ["node", "verify/verify.js"]
+    # verify 为一次性服务：运行规则测试、构建检查及 API/HTTP 冒烟后退出，
+    # 退出码即验收结论（0 通过 / 1 失败）。查看：docker compose up --build verify
+    restart: "no"
+
+volumes:
+  calib-data:
