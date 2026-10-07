@@ -1,0 +1,124 @@
+:root {
+  --accepted: #1a7f37;
+  --accepted-bg: #e6f4ea;
+  --point: #b45309;
+  --point-bg: #fef3c7;
+  --phantom: #b91c1c;
+  --phantom-bg: #fee2e2;
+  --idconflict: #7c2d12;
+  --idconflict-bg: #ffedd5;
+  --border: #d0d7de;
+  --bg: #f6f8fa;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: #1f2328;
+}
+header {
+  background: #0d1117;
+  color: #f0f6fc;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+header h1 { font-size: 18px; margin: 0; }
+.badge {
+  background: rgba(255,255,255,0.12);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+}
+.card h2 { font-size: 15px; margin: 0 0 10px; }
+.hint { font-size: 12px; color: #57606a; margin: 0 0 10px; }
+code { background: #eff1f3; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+textarea, input {
+  width: 100%;
+  font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 4px 0 10px;
+}
+.form-row label { font-size: 13px; font-weight: 600; }
+button {
+  background: #0969da;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 16px;
+  cursor: pointer;
+  font-size: 13px;
+}
+button:hover { filter: brightness(1.08); }
+button.secondary { background: #6e7781; }
+.msg { margin-left: 10px; font-size: 13px; }
+.msg.ok { color: var(--accepted); }
+.msg.err { color: var(--phantom); }
+.kvgrid { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin-top: 8px; }
+.kvgrid .k { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+.kvgrid .v { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; color: #0969da; }
+.txn {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+.txn-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.txn-head .tid { font-family: ui-monospace, Menlo, monospace; font-weight: 600; }
+.txn-head .meta { color: #57606a; font-size: 12px; margin-left: auto; }
+.txn-accepted .txn-head { background: var(--accepted-bg); }
+.txn-point_read_conflict .txn-head { background: var(--point-bg); }
+.txn-phantom_read .txn-head {
+  background: linear-gradient(120deg, var(--phantom-bg), #fff5f5);
+}
+.txn-transaction_id_conflict .txn-head { background: var(--idconflict-bg); }
+.txn-stale_generation .txn-head { background: #e5e7eb; }
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.pill.accepted { background: var(--accepted); color: #fff; }
+.pill.rejected { background: var(--phantom); color: #fff; }
+.pill.reason { background: rgba(0,0,0,0.08); color: #1f2328; text-transform: none; letter-spacing: 0; }
+.txn-body { padding: 12px 14px; border-top: 1px solid var(--border); display: none; }
+.txn.open .txn-body { display: block; }
+details.scan { margin: 8px 0; border: 1px dashed var(--border); border-radius: 6px; padding: 6px 10px; }
+details.scan summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.scan .keylist { font-family: ui-monospace, Menlo, monospace; font-size: 12px; margin: 6px 0 0; padding-left: 18px; }
+.conflict-box {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #f6f8fa;
+  border: 1px solid var(--border);
+  font-family: ui-monospace, Menlo, monospace;
+  white-space: pre-wrap;
+}
+.newgen { font-weight: 700; color: var(--accepted); }
+.replay-tag { font-size: 11px; color: #57606a; border: 1px solid #afb8c1; padding: 1px 6px; border-radius: 4px; }
+.section-label { font-size: 12px; font-weight: 700; color: #57606a; margin: 10px 0 4px; }

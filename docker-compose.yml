@@ -1,0 +1,39 @@
+services:
+  calibration:
+    build: .
+    image: ground-calibration-library:latest
+    environment:
+      # Configurable host port is wired via APP_PORT below.
+      PORT: "8080"
+      CALIB_DB: /data/calibration.json
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - calib-data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+             "import json,urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8080/healthz',timeout=2); assert json.load(r)['status']=='ok'"]
+      interval: 5s
+      timeout: 3s
+      start_period: 2s
+      retries: 10
+
+  verify:
+    build: .
+    image: ground-calibration-library:verify
+    # The verify service exercises the running stack end to end:
+    # rule tests, build checks and API/HTTP smoke scenarios, then exits
+    # with an acceptance verdict as its process exit code.
+    depends_on:
+      calibration:
+        condition: service_healthy
+    environment:
+      BASE_URL: http://calibration:8080
+      EXPECTED_HOST_PORT: "${APP_PORT:-8080}"
+    # The exercise must start from a clean verdict log for deterministic
+    # acceptance. Remove the volume on a re-run with: docker compose down -v.
+    entrypoint: ["python3", "verify.py"]
+    profiles: ["verify"]
+
+volumes:
+  calib-data:

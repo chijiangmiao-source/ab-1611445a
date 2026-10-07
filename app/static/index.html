@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>地面标定库 · 并发提交裁决演练</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header>
+  <h1>地面标定库 · 并发提交裁决</h1>
+  <div id="gen-badge" class="badge">当前代次：<strong id="current-gen">…</strong></div>
+</header>
+
+<main>
+  <section class="card" id="exercise-card">
+    <h2>1. 建立演练（初始键值）</h2>
+    <p class="hint">JSON 对象，例如 <code>{"calib.sensorA.offset":"0.012","calib.sensorB.offset":"-0.030"}</code>。建立后即固化为第 0 代。</p>
+    <textarea id="initial-kv" rows="4">{
+  "calib.sensorA.offset": "0.012",
+  "calib.sensorB.offset": "-0.030",
+  "calib.sensorA.gain": "1.001"
+}</textarea>
+    <button id="seed-btn">建立演练</button>
+    <span id="seed-msg" class="msg"></span>
+  </section>
+
+  <section class="card">
+    <h2>2. 当前键值</h2>
+    <button id="refresh-btn" class="secondary">刷新</button>
+    <div id="state-view" class="kvgrid"><em>尚未建立演练。</em></div>
+  </section>
+
+  <section class="card">
+    <h2>3. 提交事务</h2>
+    <p class="hint">
+      带稳定事务标识、快照代次、点读取、前缀扫描（含快照中看到的键集合）与拟写入值。
+      点读取值用 <code>null</code> 表示快照时该键不存在。
+    </p>
+    <div class="form-row"><label>事务标识 transaction_id</label>
+      <input id="f-txn" value="txn-1" /></div>
+    <div class="form-row"><label>快照代次 snapshot_generation</label>
+      <input id="f-gen" type="number" min="0" value="0" /></div>
+    <div class="form-row"><label>点读取 point_reads（JSON 对象）</label>
+      <textarea id="f-points" rows="3">{
+  "calib.sensorA.offset": "0.012"
+}</textarea></div>
+    <div class="form-row"><label>前缀扫描 prefix_scans（JSON 数组）</label>
+      <textarea id="f-scans" rows="4">[
+  {"prefix": "calib.sensorA.", "seen_keys": ["calib.sensorA.gain", "calib.sensorA.offset"]}
+]</textarea></div>
+    <div class="form-row"><label>拟写入 writes（JSON 对象）</label>
+      <textarea id="f-writes" rows="3">{
+  "calib.sensorA.offset": "0.015"
+}</textarea></div>
+    <button id="commit-btn">提交</button>
+    <span id="commit-msg" class="msg"></span>
+  </section>
+
+  <section class="card">
+    <h2>4. 事务裁决与快照证据</h2>
+    <button id="reload-txns" class="secondary">刷新列表</button>
+    <div id="txn-list"></div>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
